@@ -101,5 +101,4 @@ class package_predict():
         """
         model =keras.models.load_model('/PackageRelModel')
         rel_pos, pitch, yaw, roll = model.predict(img)
-
-
+		return rel_pos, pitch, yaw roll

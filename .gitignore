@@ -6,4 +6,4 @@
 models/
 unreal_envs/*/
 scratch.py
-
+.venv
