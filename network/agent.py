@@ -8,7 +8,7 @@ from network.loss_functions import *
 from numpy import linalg as LA
 from aux_functions import get_CustomImage, get_MonocularImageRGB, get_StereoImageRGB
 import importlib
-from vae import package_predict
+# from vae import package_predict
 
 class PedraAgent():
 	def __init__(self, cfg, client, name, vehicle_name):
@@ -217,7 +217,7 @@ class PedraAgent():
 
 		return L1, C1, R1
 
-	def reward_gen(self, d_new, action, crash_threshold, thresh, debug, cfg, package_weight):
+	def reward_gen(self, d_new, action, crash_threshold, thresh, debug, cfg):
 		L_new, C_new, R_new = self.avg_depth(d_new, thresh, debug, cfg)
 
 		# For now, lets keep the reward a simple one
@@ -232,15 +232,17 @@ class PedraAgent():
 				# reward = C_new/3
 				reward = C_new
 
-			if self.found_package:
-				# TODO: alternate reward function if package has been picked up
-			else:
-				png_image = self.client.simGetImage("0", airsim.ImageType.Scene)
-				rel_pos, pitch, yaw, roll = package_predict.predict()
-				reward -= package_weight * (rel_pos + pitch + yaw + roll)
+			# if self.found_package:
+			# 	# TODO: alternate reward function if package has been picked up
+            #     pass
+			# else:
+			# 	png_image = self.client.simGetImage("0", airsim.ImageType.Scene)
+			# 	rel_pos, pitch, yaw, roll = package_predict.predict()
+			# 	reward -= package_weight * (rel_pos + pitch + yaw + roll)
 
-				if rel_pos == 0 and pitch == 0 and yaw == 0 and roll == 0:
-					# TODO: need to consider numerical imprecision, and whether 0 is what we even want
-					self.found_package = True
+			# 	if rel_pos == 0 and pitch == 0 and yaw == 0 and roll == 0:
+            #         # TODO: need to consider numerical imprecision, and whether 0 is what we even
+            #         # want
+			# 		self.found_package = True
 
 		return reward, done
