@@ -80,6 +80,20 @@ def indoor_complex():
     crash_threshold = 0.07
     return orig_ip, level_name, crash_threshold
 
+# Train complex indoor initial positions
+def PAGENT1():
+    # The environment can be downloaded from
+    # https://drive.google.com/drive/u/2/folders/1u5teth6l4JW2IXAkZAg1CbDGR6zE-v6Z
+    orig_ip = [
+        [530,110,42],  # Player start
+        [0,0,0],
+        [0,0,0],
+        [0,0,0]
+    ]
+    level_name = ['Complex1', 'Complex2', 'Complex3', 'Complex4']
+    crash_threshold = 0.07
+    return orig_ip, level_name, crash_threshold
+
 # Test condo indoor initial positions
 def indoor_cloud():
     # The environment can be downloaded from
