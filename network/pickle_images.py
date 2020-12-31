@@ -44,7 +44,7 @@ def pickle_images(data_path=os.path.join("..", "data", "package_predict")):
                 key=lambda e: e.name)]:
             assert image_f.split(".")[-1] == "png"
 
-            image_np = np.asarray(Image.open(image_f)).astype("float64")[:, :, :3] / 255
+            image_np = np.asarray(Image.open(image_f)).astype("float64")[:, :, :3]
 
             ### Transformation used to flatten images if desired, row-major
             # image_np = np.transpose(image_np, (2, 0, 1)).flatten()

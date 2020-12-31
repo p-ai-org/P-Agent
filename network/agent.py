@@ -8,7 +8,9 @@ from network.loss_functions import *
 from numpy import linalg as LA
 from aux_functions import get_CustomImage, get_MonocularImageRGB, get_StereoImageRGB
 import importlib
-# from vae import package_predict
+from network.vae import package_predict
+import pdb
+from tensorflow.keras import backend as K
 
 class PedraAgent():
 	def __init__(self, cfg, client, name, vehicle_name):
@@ -22,6 +24,8 @@ class PedraAgent():
 		print('Initializing ', half_name)
 
 		self.found_package = False
+
+		self.package = package_predict()
 
 		###########################################################################
 		# Network related modules: Class
@@ -232,17 +236,33 @@ class PedraAgent():
 				# reward = C_new/3
 				reward = C_new
 
-			# if self.found_package:
-			# 	# TODO: alternate reward function if package has been picked up
-            #     pass
-			# else:
-			# 	png_image = self.client.simGetImage("0", airsim.ImageType.Scene)
-			# 	rel_pos, pitch, yaw, roll = package_predict.predict()
-			# 	reward -= package_weight * (rel_pos + pitch + yaw + roll)
+		if self.found_package:
+			# TODO: alternate reward function if package has been picked up
+			pass
+		else:
+			# TODO: move to function params
+			package_weight = 1
 
-			# 	if rel_pos == 0 and pitch == 0 and yaw == 0 and roll == 0:
-            #         # TODO: need to consider numerical imprecision, and whether 0 is what we even
-            #         # want
-			# 		self.found_package = True
+			response = self.client.simGetImages([airsim.ImageRequest("0",
+					airsim.ImageType.DepthPlanner, False, False)])[0]
+
+			# get numpy array
+			img = np.fromstring(response.image_data_uint8, dtype=np.uint8)
+
+			# reshape array to 3-channel image H X W X 3
+			img = img.reshape(response.height, response.width, 3)
+
+			# original image is flipped vertically
+			img = np.flipud(img)
+
+			pdb.set_trace()
+			K.clear_session()
+			distances = self.package.predict(np.expand_dims(img, axis=0))
+			reward -= package_weight * np.mean(distances)
+
+			if np.mean(distances) < 0.01:
+                # TODO: need to consider numerical imprecision, and whether 0 is what we even
+                # want
+				self.found_package = True
 
 		return reward, done
