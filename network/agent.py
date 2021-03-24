@@ -8,7 +8,7 @@ from network.loss_functions import *
 from numpy import linalg as LA
 from aux_functions import get_CustomImage, get_MonocularImageRGB, get_StereoImageRGB
 import importlib
-from network.vae import package_predict
+from network.CNN import package_predict
 import pdb
 from tensorflow.keras import backend as K
 
