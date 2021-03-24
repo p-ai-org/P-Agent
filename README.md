@@ -3,13 +3,13 @@ Fall Team: Michael Lee, Adam Guo, Vani Sachdev, Christine Cannon
 Spring Team: Michael Lee, Jared Mejia, Danica Du, Rachel Yang, Nessa Kiani
 
 # Project Layout
-data: Stores the results of Data Collection
-Data_Collection: Scripts that run data collection
-Network
--CNN
--Hardcoded (Controller)
--*Reinforcement Learning Algorithm (Replaces Hardcoded)*
-Unreal_Envs: Holds project environments
+data: Stores the results of Data Collection\
+Data_Collection: Scripts that run data collection\
+Network\
+-CNN\
+-Hardcoded (Controller)\
+-*Reinforcement Learning Algorithm (Replaces Hardcoded)*\
+Unreal_Envs: Holds project environments\
 
 # How To:
 1. Open a packaged unreal environment located in unreal_envs to start the simulation (F1 opens options)
