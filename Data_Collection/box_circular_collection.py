@@ -7,16 +7,25 @@ import time
 
 pp = pprint.PrettyPrinter(indent=4)
 
+segmentation = True
+
 # Outline Circle
 n = 20       # Points in circle
-offset = 0
-r = (180 * .001) - offset         # Radius of Circle (in Unreal) # TODO: Figure out the scaling...
-velocity = 1
+offset_x = 1.2          # 120 units from native unreal -> Airsim (cm -> m); Position of Package
+offset_y = 1.4
+r = (170 * .01)         # Radius of Circle (in Unreal) # TODO: Figure out the scaling...
+
+# Create Points and angles
 
 pts = np.zeros([n, 2])
 
-pts[:,0] = [r * np.sin(x) for x in range(n)]
-pts[:,1] = [r * np.cos(y) for y in range(n)]
+
+pts[:,0] = [r * np.sin(x) + offset_x for x in np.linspace(0, (2*np.pi), n)]
+pts[:,1] = [r * np.cos(y) + offset_y for y in np.linspace(0, (2*np.pi), n)]
+z = 0
+
+pitch = np.sin(z / (np.sqrt( (pts[:,0] - offset_x)**2 + (pts[:,1]-offset_y)**2 )))
+yaw = np.sin( (pts[:,1] - offset_y) / ( np.sqrt( (pts[:,0] - offset_x)**2 + (pts[:,1]-offset_y)**2 ) ) )
 
 # connect to the AirSim simulator
 client = airsim.VehicleClient()
@@ -35,12 +44,19 @@ except OSError:
     if not os.path.isdir(tmp_dir):
         raise
 
-for x, y in pts:
-    client.simSetVehiclePose(airsim.Pose(airsim.Vector3r(x, y, 0), airsim.to_quaternion(0, 0, 1)), True)    # Z in unreal coordinates needs to be flipped
-    time.sleep(0.1)
 
-    responses = client.simGetImages([
-    airsim.ImageRequest("0", airsim.ImageType.Scene)])
+for count, [x, y] in enumerate(pts):
+    client.simSetVehiclePose(airsim.Pose(airsim.Vector3r(x, y, z), airsim.to_quaternion(pitch[count], 0, -yaw[count])), True)    # quaternion in pitch, roll, yaw (Possibly in radians?)
+    # client.simSetCameraPose(self, camera_name, pose, vehicle_name = '')
+    time.sleep(1)
+
+    # Save Data with desired channel
+    # if segmentation:
+    #     responses = client.simGetImages([
+    #     airsim.ImageRequest("4", airsim.ImageType.Scene)])
+    # else:
+    #     responses = client.simGetImages([
+    #     airsim.ImageRequest("0", airsim.ImageType.Scene)])
 
     # TODO Save the files to Data folder
 
