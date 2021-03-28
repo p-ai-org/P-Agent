@@ -4,6 +4,5 @@
 *.xml
 .idea/
 models/
-**/data
 scratch.py
 .venv
