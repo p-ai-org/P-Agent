@@ -58,7 +58,7 @@ for count, [x, y] in enumerate(pts):
     # Save Data with desired channel
     if segmentation:
         responses = client.simGetImages([
-        airsim.ImageRequest("4", airsim.ImageType.Scene), 
+        airsim.ImageRequest("0", airsim.ImageType.Scene), 
         airsim.ImageRequest("0", airsim.ImageType.Segmentation, True)])
     else:
         responses = client.simGetImages([
