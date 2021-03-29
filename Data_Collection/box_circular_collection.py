@@ -49,7 +49,7 @@ except OSError:
         raise
 
 try:
-    with open(os.path.join(tmp_dir, file_name), 'a') as f:
+    with open(os.path.join(tmp_dir, file_name), 'w') as f:
         f.write("x   y   z   rel_x   rel_y   rel_z   pitch   yaw   roll\n")
 except OSError:
     raise
