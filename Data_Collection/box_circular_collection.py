@@ -1,5 +1,5 @@
 import airsim
-
+import cv2
 import numpy as np
 import pprint
 import os
@@ -9,6 +9,7 @@ pp = pprint.PrettyPrinter(indent=4)
 
 segmentation = True
 file_name = "pos.txt"
+object_name = "PACKAGE"
 unreal_object = [1.2, 1.4, 0]           # Hardcoded Package Details
 
 # Outline Circle
@@ -29,6 +30,7 @@ yaw = np.arcsin( (pts[:,1] - offset_y  ) / ( np.sqrt( (pts[:,0] - offset_x)**2 +
 yaw[:n//2] = yaw[:n//2] - (np.pi)
 yaw[n//2:] = -yaw[n//2:]
 
+#TODO: add z axis component to data collection
 
 # connect to the AirSim simulator
 client = airsim.VehicleClient()
@@ -58,9 +60,11 @@ for count, [x, y] in enumerate(pts):
 
     # Save Data with desired channel
     if segmentation:
+        success = client.simSetSegmentationObjectID(object_name, 20)
         responses = client.simGetImages([
-        airsim.ImageRequest("0", airsim.ImageType.Scene), 
-        airsim.ImageRequest("0", airsim.ImageType.Segmentation, True)])
+        airsim.ImageRequest("0", airsim.ImageType.Scene),         # REGULAR PICTURE
+        airsim.ImageRequest("0", airsim.ImageType.Segmentation, False, False)])
+
     else:
         responses = client.simGetImages([
         airsim.ImageRequest("0", airsim.ImageType.Scene)])
@@ -71,9 +75,14 @@ for count, [x, y] in enumerate(pts):
         if response.pixels_as_float:
             print("Type %d, size %d, pos %s" % (response.image_type, len(response.image_data_float), pprint.pformat(response.camera_position)))
             airsim.write_pfm(os.path.normpath(os.path.join(tmp_dir, "Segmentation", str(x) + "_" + str(i) + '.pfm')), airsim.get_pfm_array(response))
-        else:
+        elif response.compress:     #png format
             print("Type %d, size %d, pos %s" % (response.image_type, len(response.image_data_uint8), pprint.pformat(response.camera_position)))
             airsim.write_file(os.path.normpath(os.path.join(tmp_dir, "Normal", str(x) + "_" + str(i) + '.png')), response.image_data_uint8)
+        else: #uncompressed array - numpy demo
+            print("Type %d, size %d" % (response.image_type, len(response.image_data_uint8)))
+            img1d = np.fromstring(response.image_data_uint8, dtype=np.uint8) #get numpy array
+            img_rgb = img1d.reshape(response.height, response.width, 3) #reshape array to 3 channel image array H X W X 3
+            cv2.imwrite(os.path.join(tmp_dir, "Segmentation", str(x) + "_" + str(i) + '.pfm'), img_rgb) # write to png
 
         pp.pprint(client.simGetVehiclePose().position.x_val)
         drone_state = client.simGetVehiclePose
