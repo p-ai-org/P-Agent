@@ -8,7 +8,7 @@ import time
 
 pp = pprint.PrettyPrinter(indent=4)
 
-segmentation = True
+segmentation = False
 file_name = "pos.txt"
 unreal_object = [1.2, 1.4, 0]           # Hardcoded Package Details
 
@@ -17,7 +17,7 @@ TOP_LEFT = (-0.9, -0.9)
 TOP_RIGHT = (2.7, -0.9)
 BOT_LEFT = (-0.9, 2.5)
 BOT_RIGHT = (2.7, 2.5)
-MAX_HEIGHT = 3.0  # in z-axis
+MAX_HEIGHT = 2.5  # in z-axis ("Roof" is at 3.0)
 
 # connect to the AirSim simulator
 client = airsim.VehicleClient()
@@ -60,7 +60,7 @@ def load_points(x_increment, y_increment, z_increment):
     pts_L = []
     x_coords = np.linspace(TOP_LEFT[0], TOP_RIGHT[0], num=x_increment)
     y_coords = np.linspace(TOP_LEFT[1], BOT_LEFT[1], num=y_increment)
-    z_coords = np.linspace(0, -MAX_HEIGHT, num=z_increment)
+    z_coords = np.linspace(0, -MAX_HEIGHT, num=z_increment)     # Z axis flipped
     
     for x in x_coords:
         for y in y_coords:
@@ -101,31 +101,32 @@ def collect_data(x_increment, y_increment, z_increment, rot_increment):
                 # save images to file
                 if response.pixels_as_float:
                     print("Type %d, size %d, pos %s" % (response.image_type, len(response.image_data_float), pprint.pformat(response.camera_position)))
-                    airsim.write_pfm(os.path.normpath(os.path.join(tmp_dir, "Segmentation", str(x) + "_" + str(i) + '.pfm')), airsim.get_pfm_array(response))
+                    airsim.write_pfm(os.path.normpath(os.path.join(tmp_dir, "Segmentation", str(round(x,2)) + "_" + str(round(y,2)) + "_" + str(round(z,2))+ "_" + str(round(yaw,2)) + "_"+ str(i) + '.pfm')), airsim.get_pfm_array(response))
                 elif response.compress:  # png format
                     print("Type %d, size %d, pos %s" % (response.image_type, len(response.image_data_uint8), pprint.pformat(response.camera_position)))
-                    airsim.write_file(os.path.normpath(os.path.join(tmp_dir, "Normal", str(x) + "_" + str(i) + '.png')), response.image_data_uint8)
+                    airsim.write_file(os.path.normpath(os.path.join(tmp_dir, "Normal",str(round(x,2)) + "_" + str(round(y,2)) + "_" + str(round(z,2))+ "_" + str(round(yaw,2)) + "_"+ str(i) + '.png')), response.image_data_uint8)
                 else:  # uncompressed array - numpy demo
                     print("Type %d, size %d" % (response.image_type, len(response.image_data_uint8)))
                     img1d = np.fromstring(response.image_data_uint8, dtype=np.uint8)  # get numpy array
                     img_rgb = img1d.reshape(response.height, response.width, 3)  # reshape array to 3 channel image array H X W X 3
-                    cv2.imwrite(os.path.join(tmp_dir, "Segmentation", str(x) + "_" + str(i) + '.pfm'), img_rgb) # write to png
+                    cv2.imwrite(os.path.join(tmp_dir, "Segmentation", str(round(x,2)) + "_" + str(round(y,2)) + "_" + str(round(z,2))+ "_" + str(round(yaw,2)) + "_"+ str(i) + '.pfm'), img_rgb) # write to png
 
-                pp.pprint(client.simGetVehiclePose().position.x_val)
-                drone_state = client.simGetVehiclePose
+                if i == 1:
+                    pp.pprint(client.simGetVehiclePose().position.x_val)
+                    drone_state = client.simGetVehiclePose
 
-                # log relevent state information
-                pitchRollYaw = airsim.utils.to_eularian_angles(drone_state().orientation)
-                with open(os.path.join(tmp_dir, file_name), 'a') as f:
-                    f.write("{},{},{},{},{},{},{},{},{}\n".format(drone_state().position.x_val, 
-                                                        drone_state().position.y_val,
-                                                        drone_state().position.z_val,
-                                                        drone_state().position.x_val - unreal_object[0], 
-                                                        drone_state().position.y_val - unreal_object[1],
-                                                        drone_state().position.z_val - unreal_object[2],
-                                                        pitchRollYaw[0],
-                                                        pitchRollYaw[1],
-                                                        pitchRollYaw[2]))
+                    # log relevent state information
+                    pitchRollYaw = airsim.utils.to_eularian_angles(drone_state().orientation)
+                    with open(os.path.join(tmp_dir, file_name), 'a') as f:
+                        f.write("{},{},{},{},{},{},{},{},{}\n".format(drone_state().position.x_val, 
+                                                            drone_state().position.y_val,
+                                                            drone_state().position.z_val,
+                                                            drone_state().position.x_val - unreal_object[0], 
+                                                            drone_state().position.y_val - unreal_object[1],
+                                                            drone_state().position.z_val - unreal_object[2],
+                                                            pitchRollYaw[0],
+                                                            pitchRollYaw[1],
+                                                            pitchRollYaw[2]))
         # sanity check
         pose = client.simGetVehiclePose()
         pp.pprint(pose)
