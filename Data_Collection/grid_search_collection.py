@@ -10,6 +10,7 @@ pp = pprint.PrettyPrinter(indent=4)
 
 segmentation = True
 file_name = "pos.txt"
+unreal_object = [1.2, 1.4, 0]           # Hardcoded Package Details
 
 # corner points distance [meters] relative to spawn location 
 TOP_LEFT = (-0.9, -0.9)
@@ -59,7 +60,7 @@ def load_points(x_increment, y_increment, z_increment):
     pts_L = []
     x_coords = np.linspace(TOP_LEFT[0], TOP_RIGHT[0], num=x_increment)
     y_coords = np.linspace(TOP_LEFT[1], BOT_LEFT[1], num=y_increment)
-    z_coords = np.linspace(0, MAX_HEIGHT, num=z_increment)
+    z_coords = np.linspace(0, -MAX_HEIGHT, num=z_increment)
     
     for x in x_coords:
         for y in y_coords:
@@ -83,12 +84,12 @@ def collect_data(x_increment, y_increment, z_increment, rot_increment):
     for [x, y, z] in pts:
         for yaw in rot_coords:
             # TODO: figure out what second param does
-            client.simSetVehiclePost(airsim.Pos(airsim.Vector3r(x, y, z), airsim.to_quaternion(0, 0, yaw)), True)  # PRY in radians
+            client.simSetVehiclePose(airsim.Pose(airsim.Vector3r(x, y, z), airsim.to_quaternion(0, 0, yaw)), True)  # PRY in radians
             time.sleep(0.2)
 
             # save data with desired channel
             if segmentation:
-                success = client.simSetSegmentationObjectID(object_name, 20)
+                # success = client.simSetSegmentationObjectID(object_name, 20)
                 responses = client.simGetImages([
                 airsim.ImageRequest("0", airsim.ImageType.Scene),  # REGULAR PICTURE
                 airsim.ImageRequest("0", airsim.ImageType.Segmentation, False, False)])
