@@ -8,7 +8,8 @@ import time
 
 pp = pprint.PrettyPrinter(indent=4)
 
-segmentation = False
+segmentation = True
+object_name = "PACKAGE"
 file_name = "pos.txt"
 unreal_object = [1.2, 1.4, 0]           # Hardcoded Package Details
 
@@ -89,7 +90,7 @@ def collect_data(x_increment, y_increment, z_increment, rot_increment):
 
             # save data with desired channel
             if segmentation:
-                # success = client.simSetSegmentationObjectID(object_name, 20)
+                success = client.simSetSegmentationObjectID(object_name, 20)
                 responses = client.simGetImages([
                 airsim.ImageRequest("0", airsim.ImageType.Scene),  # REGULAR PICTURE
                 airsim.ImageRequest("0", airsim.ImageType.Segmentation, False, False)])
