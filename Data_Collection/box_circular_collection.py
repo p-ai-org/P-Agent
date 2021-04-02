@@ -11,6 +11,7 @@ segmentation = True
 file_name = "pos.txt"
 object_name = "PACKAGE"
 unreal_object = [1.2, 1.4, 0]           # Hardcoded Package Details
+MAX_HEIGHT = 3.0
 
 # Outline Circle
 n = 20       # Points 
@@ -20,10 +21,10 @@ r = (170 * .01)         # Radius of Circle (in Unreal)
 
 
 # Create Points and angles
-pts = np.zeros([n, 2])
+pts = np.zeros([n, 3])
 pts[:,0] = [r * np.sin(x) + offset_x for x in np.linspace(0, (2*np.pi), n)]
 pts[:,1] = [r * np.cos(y) + offset_y for y in np.linspace(0, (2*np.pi), n)]
-z = 0
+pts[:,2] = [z for z in np.linspace(0, -MAX_HEIGHT, n)]
 
 pitch = np.arcsin(z / (np.sqrt( (pts[:,0] - offset_x)**2 + (pts[:,1]-offset_y)**2 )))
 yaw = np.arcsin( (pts[:,1] - offset_y  ) / ( np.sqrt( (pts[:,0] - offset_x)**2 + (pts[:,1]-offset_y)**2 ) ) )
@@ -54,7 +55,7 @@ try:
 except OSError:
     raise
 
-for count, [x, y] in enumerate(pts):
+for count, [x, y, z] in enumerate(pts):
     client.simSetVehiclePose(airsim.Pose(airsim.Vector3r(x, y, z), airsim.to_quaternion(pitch[count], 0, yaw[count])), True)    # quaternion in pitch, roll, yaw (Possibly in radians?)
     time.sleep(0.2)     # So you don't throw up from motion sickness when you're watching data collection
 
