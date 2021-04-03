@@ -17,7 +17,7 @@ MAX_HEIGHT = 3.0
 n = 20       # Points 
 offset_x = unreal_object[0]          # 120 units from native unreal -> Airsim (cm -> m); Position of Package relative to spawn
 offset_y = unreal_object[1]
-r = (170 * .01)         # Radius of Circle (in Unreal)
+r = (120 * .01)         # Radius of Circle (in Unreal)
 
 
 # Create Points and angles
@@ -25,13 +25,15 @@ pts = np.zeros([n, 3])
 pts[:,0] = [r * np.sin(x) + offset_x for x in np.linspace(0, (2*np.pi), n)]
 pts[:,1] = [r * np.cos(y) + offset_y for y in np.linspace(0, (2*np.pi), n)]
 pts[:,2] = [z for z in np.linspace(0, -MAX_HEIGHT, n)]
+# pts[:,2] = - np.ones([1,n]) * 2
 
-pitch = np.arcsin(z / (np.sqrt( (pts[:,0] - offset_x)**2 + (pts[:,1]-offset_y)**2 )))
-yaw = np.arcsin( (pts[:,1] - offset_y  ) / ( np.sqrt( (pts[:,0] - offset_x)**2 + (pts[:,1]-offset_y)**2 ) ) )
-yaw[:n//2] = yaw[:n//2] - (np.pi)
-yaw[n//2:] = -yaw[n//2:]
+#Pitch: Positive is Up; Yaw: Positive is Right; Ro
+# ll: Positive is roll clockwise
 
-#TODO: add z axis component to data collection
+pitch = np.arctan(pts[:,2] / r)
+
+yaw = - (np.arcsin( (abs(pts[:,0]) - pts[0,0]) / r ) + np.pi/2)     # Generating angle and flipping to turn left
+yaw[n//4:3* n//4] = - yaw[n//4:3* n//4]     # Other side of the circle must be reflipped
 
 # connect to the AirSim simulator
 client = airsim.VehicleClient()
