@@ -14,7 +14,7 @@ unreal_object = [1.2, 1.4, 0]           # Hardcoded Package Details
 MAX_HEIGHT = 3.0
 
 # Outline Circle
-n = 20       # Points 
+n = 200       # Points 
 offset_x = unreal_object[0]          # 120 units from native unreal -> Airsim (cm -> m); Position of Package relative to spawn
 offset_y = unreal_object[1]
 r = (120 * .01)         # Radius of Circle (in Unreal)
