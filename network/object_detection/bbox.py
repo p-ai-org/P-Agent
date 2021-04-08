@@ -50,9 +50,9 @@ class PackageDataset(torch.utils.data.Dataset):
             x0, y0, x1, y1 = get_box(seg)
             # ensuring we have positive height and width for box
             if x0 >= x1:
-                x1 += 1
+                x1 = x0 + 1
             if y0 >= y1:
-                y1 += 1
+                y1 = y0 + 1
         except ValueError:
             print("no package in frame")
             x0, y0, x1, y1 = [0]*4
@@ -70,7 +70,7 @@ class PackageDataset(torch.utils.data.Dataset):
         target["masks"] = masks
         target["image_id"] = torch.tensor([idx])
         target["area"] = torch.tensor([area])
-        # target["iscrowd"] = torch.tensor([0])
+        target["iscrowd"] = torch.tensor([0])
 
         if self.transforms is not None:
             img, target = self.transforms(img, target)
@@ -128,7 +128,7 @@ def show_pred_box(test_im_path, boxes):
 
 
 def testing_images(im_dir, model, show_im=False):
-    for f in sorted(os.lisdir(im_dir)):
+    for f in sorted(os.listdir(im_dir)):
         f_im = PIL.Image.open(os.path.join(im_dir, f)).convert("RGB")
         f_tensor = transforms.ToTensor()(f_im)
         with torch.no_grad():

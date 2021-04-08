@@ -7,6 +7,8 @@ from box_hndlr import iso_package, get_box, draw_box
 from pypfm import PFMLoader
 from shutil import copyfile
 
+PACKAGE_COLOR = np.array([147, 0, 190])  # need to ensure this is always correct
+
 def main():
     z_file = sys.argv[1]
     new_dir = sys.argv[2]
@@ -34,7 +36,7 @@ def main():
         seg_path = os.path.join(z_file_base, 'Segmentation', f[:-4] + '.pfm')
 
         try:
-            # out_im = draw_box(img_path, seg_path, PACKAGE_COLOR)
+            out_im = draw_box(img_path, seg_path, PACKAGE_COLOR)
             # print(f'img: {f}')
             # display(out_im)
             includes_package.append(f)
