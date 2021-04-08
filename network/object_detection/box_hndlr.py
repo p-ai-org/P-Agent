@@ -39,7 +39,7 @@ def get_box(seg_arr):
     return [x_0, y_0, x_1, y_1]
 
 
-  def draw_box(img_path, seg_path, rgb_vals):
+def draw_box(img_path, seg_path, rgb_vals):
     """
     Function to generate image with bounding box from segmentation label
     """

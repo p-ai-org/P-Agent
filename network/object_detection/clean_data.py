@@ -16,14 +16,14 @@ def main():
 
     z_file_base = z_file[:-4]
     old_names = {}
-    for i, f in enumerate(sorted(os.listdir(os.listdir(z_file_base, 'Normal')))):
+    for i, f in enumerate(sorted(os.listdir(os.path.join(z_file_base, 'Normal')))):
         fname = str(i).zfill(4)
         root = f[:-5]
-        shutil.move(os.path.join(z_file_base, 'Normal'), os.path.join(z_file_base, 'Normal', fname + '.png'))
+        shutil.move(os.path.join(z_file_base, 'Normal', f), os.path.join(z_file_base, 'Normal', fname + '.png'))
         shutil.move(os.path.join(z_file_base, 'Segmentation', root + '1.pfm'), os.path.join(z_file_base, 'Segmentation', fname + '.pfm'))
 
-    num_images = len(os.listdir(os.path.join(z_file_base, 'Normal'))
-    assert  num_images == len(os.listdir(os.path.join(z_file_base, 'Segmentation')))
+    num_images = len(os.listdir(os.path.join(z_file_base, 'Normal')))
+    assert num_images == len(os.listdir(os.path.join(z_file_base, 'Segmentation')))
     
     print(f"Number of files in directory: {num_images}")
 
@@ -44,8 +44,10 @@ def main():
     print(f"Number of images with package in frame: {len(includes_package)}")
     print(f"Number of images without package in frame: {num_images - len(includes_package)}")
 
-    os.mkdir(os.path.join(new_dir, 'Normal'))
-    os.mkdir(os.path.join(new_dir, 'Segmentation'))
+    os.mkdir(os.path.join(z_file_base, new_dir))
+
+    os.mkdir(os.path.join(z_file_base, new_dir, 'Normal'))
+    os.mkdir(os.path.join(z_file_base, new_dir, 'Segmentation'))
 
     for i, fname in enumerate(includes_package):
         new_name = str(i).zfill(3) + ".png"

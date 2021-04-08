@@ -20,6 +20,9 @@ import references.transforms as T
 import clean_data
 from box_hndlr import iso_package, get_box, draw_box
 
+# sketchy workaround to avoid OMP: Error #15: Initializing libiomp5.dylib ... on MacOS
+# os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
 PACKAGE_COLOR = np.array([147, 0, 190])  # need to ensure this is always correct
 
 class PackageDataset(torch.utils.data.Dataset):
@@ -44,15 +47,15 @@ class PackageDataset(torch.utils.data.Dataset):
 
         # get box coordinates (note we are assuming max of one object)
         try:
-        x0, y0, x1, y1 = get_box(seg)
-        # ensuring we have positive height and width for box
-        if x0 >= x1:
-        x1 += 1
-        if y0 >= y1:
-        y1 += 1
+            x0, y0, x1, y1 = get_box(seg)
+            # ensuring we have positive height and width for box
+            if x0 >= x1:
+                x1 += 1
+            if y0 >= y1:
+                y1 += 1
         except ValueError:
-        print("no package in frame")
-        x0, y0, x1, y1 = [0]*4
+            print("no package in frame")
+            x0, y0, x1, y1 = [0]*4
 
         # get area
         area = (x1 - x0) * (y1 - y0)
@@ -105,8 +108,8 @@ def get_transform(train):
     # convert PIL image to PyTorch Tensor
     transforms.append(T.ToTensor())
     if train:
-    # randomly flip training images during training
-    transforms.append(T.RandomHorizontalFlip(0.5))
+        # randomly flip training images during training
+        transforms.append(T.RandomHorizontalFlip(0.5))
     return T.Compose(transforms)
 
 # function for testing
@@ -135,7 +138,7 @@ def testing_images(im_dir, model, show_im=False):
             print(f"bbox confidence: {f_mask_pred[0]['scores'][0]}")
             if show_im:
                 display(show_pred_box(bad_file, f_mask_pred[0]['boxes'][0]))
-        except: IndexError
+        except IndexError:
             print("no package found")
             print(f"scores: {f_mask_pred[0]['scores']}")
             print(f"bboxes: {f_mask_pred[0]['boxes']}")
@@ -151,7 +154,7 @@ def main():
     """
     data_dir = sys.argv[1]
     model_out_path = sys.argv[2]
-    num_epochs = if len(sys.argv) > 3 then sys.argv[3] else 6
+    num_epochs = sys.argv[3] if len(sys.argv) > 3 else 6
 
     # using dataset and defined transformations
     dataset = PackageDataset(data_dir, get_transform(train=True))
@@ -166,11 +169,11 @@ def main():
     # define training and validation data loaders
     data_loader = torch.utils.data.DataLoader(
         dataset, batch_size=2, shuffle=True, num_workers=4,
-        collate_fn=utils.collate_fn)
+        collate_fn=references.utils.collate_fn)
 
     data_loader_test = torch.utils.data.DataLoader(
         dataset_test, batch_size=1, shuffle=False, num_workers=4,
-        collate_fn=utils.collate_fn)
+        collate_fn=references.utils.collate_fn)
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
