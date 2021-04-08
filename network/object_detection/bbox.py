@@ -154,7 +154,7 @@ def main():
     """
     data_dir = sys.argv[1]
     model_out_path = sys.argv[2]
-    num_epochs = sys.argv[3] if len(sys.argv) > 3 else 6
+    num_epochs = int(sys.argv[3]) if len(sys.argv) > 3 else 6
 
     # using dataset and defined transformations
     dataset = PackageDataset(data_dir, get_transform(train=True))

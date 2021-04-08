@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import PIL
+from PIL import Image
 from pypfm import PFMLoader
 
 """

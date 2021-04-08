@@ -1,3 +1,4 @@
+import cv2
 import numpy as np
 import os
 import sys
@@ -53,8 +54,8 @@ def main():
 
     for i, fname in enumerate(includes_package):
         new_name = str(i).zfill(3) + ".png"
-        copyfile(os.path.join(z_file_base, 'Normal', fname), os.path.join(new_dir, 'Normal', new_name))
-        copyfile(os.path.join(z_file_base, 'Segmentation', fname[:-2] + 'fm'), os.path.join(new_dir, 'Segmentation', new_name[:-2] + 'fm'))
+        copyfile(os.path.join(z_file_base, 'Normal', fname), os.path.join(z_file_base, new_dir, 'Normal', new_name))
+        copyfile(os.path.join(z_file_base, 'Segmentation', fname[:-2] + 'fm'), os.path.join(z_file_base, new_dir, 'Segmentation', new_name[:-2] + 'fm'))
 
 
 if __name__ == "__main__":
