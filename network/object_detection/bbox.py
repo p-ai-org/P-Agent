@@ -54,8 +54,9 @@ class PackageDataset(torch.utils.data.Dataset):
             if y0 >= y1:
                 y1 = y0 + 1
         except ValueError:
-            print("no package in frame")
-            x0, y0, x1, y1 = [0]*4
+            # print("no package in frame")
+            # x0, y0, x1, y1 = [0]*4
+            x0, y0, x1, y1 = 0, 0, 1, 1  # temporary fix to prevent non-positive box dimensions error
 
         # get area
         area = (x1 - x0) * (y1 - y0)
