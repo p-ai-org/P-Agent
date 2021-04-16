@@ -4,6 +4,7 @@ import os
 import sys
 import shutil
 import zipfile
+import py7zr
 from box_hndlr import iso_package, get_box, draw_box
 from pypfm import PFMLoader
 from shutil import copyfile
@@ -18,10 +19,15 @@ def main():
     z_file = sys.argv[1]  # the name of the zip file with hierarchy z_file/Normal(Segmentation)
     new_dir = sys.argv[2]  # the name of the new dir with hierarchy new_dir/no_package(package)/Normal(Segmentation)
 
-    with zipfile.ZipFile(z_file, 'r') as zip_ref:
-        zip_ref.extractall()
+    if z_file[-4:] == ".zip":
+        with zipfile.ZipFile(z_file, 'r') as zip_ref:
+            zip_ref.extractall()
+        z_file_base = z_file[:-4]
+    elif z_file[-3:] == ".7z":
+        with py7zr.SevenZipFile(z_file, 'r') as zip_ref:
+            zip_ref.extractall()
+        z_file_base = z_file[:-3]
 
-    z_file_base = z_file[:-4]
     old_names = {}
     for i, f in enumerate(sorted(os.listdir(os.path.join(z_file_base, 'Normal')))):
         fname = str(i).zfill(4)
