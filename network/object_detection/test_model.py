@@ -48,74 +48,71 @@ def main():
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
     assert os.path.isdir(os.path.join(test_im_dir, 'Normal'))
+    num_test_images = len(os.listdir(os.path.join(test_im_dir, 'Normal')))
 
     os.mkdir(os.path.join(test_im_dir, 'NormalEval'))
     os.mkdir(os.path.join(test_im_dir, 'NormalEval', 'images'))    
 
-    # images with package
-    if package_dir:
+    total_area = 0
+    total_conf = 0
+    # total_preds = len(os.listdir(os.path.join(test_im_dir, 'Normal')))
+    total_preds = 0
+    eval_data = {}
 
-        total_area = 0
-        total_conf = 0
-        # total_preds = len(os.listdir(os.path.join(test_im_dir, 'Normal')))
-        total_preds = 0
-        eval_data = {}
-        
-        for f in sorted(os.listdir(os.path.join(test_im_dir, 'Normal'))):
-            f_im_path = os.path.join(test_im_dir, 'Normal', f)
-            f_im = PIL.Image.open(f_im_path).convert("RGB")
-            f_tensor = transforms.ToTensor()(f_im)
-
-            with torch.no_grad():
-                # making prediction
-                mask_pred = loaded_model([f_tensor.to(device)])
-
-            # package detected
-            try:
-                box_pred = mask_pred[0]['boxes'][0]
-                conf_score = mask_pred[0]['scores'][0]
-
-                # saving new image
-                f_im_eval = show_pred_box(f_im_path, box_pred)
-                new_f_name = f[:-4] + "_eval.png"
-                f_im_eval.save(os.path.join(test_im_dir, 'NormalEval', 'images', new_f_name))
-
-                # recording statistics
-                x0, y0, x1, y1 = [int(i) for i in box_pred.tolist()]
-                center_coords = ((x0 + x1) / 2, (y0 + y1) / 2)
-                area = (x1 - x0) * (y1 - y0)
-
-                stat_dict = {"box_coords": ((x0, y0), (x1, y1)),
-                            "center_coords": center_coords,
-                            "area": area,
-                            "confidence": conf_score}
-
-                total_area += area
-                total_conf += conf_score
-                total_preds += 1
-                eval_data[new_f_name] =  stat_dict
-
-            # package not detected
-            except IndexError: 
-                pass
-        
-        # writing statistics
-        avg_area = total_area / total_preds
-        avg_conf = conf_score / total_preds
-        with open(os.path.join(test_im_dir, 'NormalEval', 'preds.txt'), 'w') as out_file:
-            out_file.write("Summary\n")
-            out_file.write(f"\tTotal packages detected: {total_preds}\tAverage bbox area: {avg_area}\tAverage prediction confidence: {avg_conf}\n")
-            out_file.write(f"box_coords,center_coords,area,confidence")
-            for f in eval_data.keys():
-                out_file.write(f"{f["box_coords"]},{f["center_coords"]},{f["area"]},{f["confidence"]}")
-
-        
-    # images without package
-    else:
-
-        pass
     
+    for f in sorted(os.listdir(os.path.join(test_im_dir, 'Normal'))):
+        f_im_path = os.path.join(test_im_dir, 'Normal', f)
+        f_im = PIL.Image.open(f_im_path).convert("RGB")
+        f_tensor = transforms.ToTensor()(f_im)
+
+        with torch.no_grad():
+            # making prediction
+            mask_pred = loaded_model([f_tensor.to(device)])
+
+        # package detected
+        try:
+            box_pred = mask_pred[0]['boxes'][0]
+            conf_score = mask_pred[0]['scores'][0]
+
+            # saving new image
+            f_im_eval = show_pred_box(f_im_path, box_pred)
+            new_f_name = f[:-4] + "_eval.png"
+            f_im_eval.save(os.path.join(test_im_dir, 'NormalEval', 'images', new_f_name))
+
+            # recording statistics
+            x0, y0, x1, y1 = [int(i) for i in box_pred.tolist()]
+            center_coords = ((x0 + x1) / 2, (y0 + y1) / 2)
+            area = (x1 - x0) * (y1 - y0)
+
+            stat_dict = {"box_coords": ((x0, y0), (x1, y1)),
+                        "center_coords": center_coords,
+                        "area": area,
+                        "confidence": conf_score}
+
+            total_area += area
+            total_conf += conf_score
+            total_preds += 1
+            eval_data[new_f_name] =  stat_dict
+
+        # package not detected
+        except IndexError: 
+            pass
+
     
+    # writing statistics
+    avg_area = total_area / total_preds
+    avg_conf = conf_score / total_preds
+    with open(os.path.join(test_im_dir, 'NormalEval', 'preds.txt'), 'w') as out_file:
+        out_file.write("Summary\n")
+        out_file.write(f"\tTotal packages detected: {total_preds}\n")
+        out_file.write(f"\tRatio of images with packages detected: {total_preds/num_test_images}\n")
+        out_file.write(f"\tAverage bbox area: {avg_area}\n")
+        out_file.write(f"\tAverage prediction confidence: {avg_conf}\n")
+        out_file.write(f"box_coords,center_coords,area,confidence\n")
+        for f in eval_data.keys():
+            out_file.write(f"{f["box_coords"]},{f["center_coords"]},{f["area"]},{f["confidence"]}\n")
+
+        
     if output_iou:
         # creating dataloader
         test_dataset = PackageDataset(test_im_dir, get_transform(train=False))
