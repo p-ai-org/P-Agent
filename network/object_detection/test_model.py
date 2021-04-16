@@ -10,6 +10,7 @@ import torch.utils.data
 import torchvision
 import zipfile
 from IPython.display import Image
+from torchvision import transforms
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 from shutil import copyfile
@@ -101,16 +102,17 @@ def main():
     
     # writing statistics
     avg_area = total_area / total_preds
-    avg_conf = conf_score / total_preds
+    avg_conf = total_conf / total_preds
     with open(os.path.join(test_im_dir, 'NormalEval', 'preds.txt'), 'w') as out_file:
         out_file.write("Summary\n")
         out_file.write(f"\tTotal packages detected: {total_preds}\n")
         out_file.write(f"\tRatio of images with packages detected: {total_preds/num_test_images}\n")
         out_file.write(f"\tAverage bbox area: {avg_area}\n")
         out_file.write(f"\tAverage prediction confidence: {avg_conf}\n")
-        out_file.write(f"box_coords,center_coords,area,confidence\n")
-        for f in eval_data.keys():
-            out_file.write(f"{f["box_coords"]},{f["center_coords"]},{f["area"]},{f["confidence"]}\n")
+        out_file.write(f"file_name,box_coords,center_coords,area,confidence\n")
+        for f_name in eval_data.keys():
+            sub_dict = eval_data[f_name]
+            out_file.write(f"{f_name},{sub_dict['box_coords']},{sub_dict['center_coords']},{sub_dict['area']},{sub_dict['confidence']}\n")
 
         
     if output_iou:

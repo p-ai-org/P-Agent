@@ -120,7 +120,6 @@ def show_pred_box(test_im_path, boxes):
     boxes: something of the form `prediction[0]['boxes'][0]`
     """
     x0, y0, x1, y1 = [int(i) for i in boxes.tolist()]
-    print(x0, y0, x1, y1)
     cv_img = cv2.imread(test_im_path)
     cv_arr = cv2.rectangle(cv_img, (x0, y0), (x1, y1), (255, 0, 255), thickness=2)
     cv_arr = cv2.cvtColor(cv_arr, cv2.COLOR_BGR2RGB)
