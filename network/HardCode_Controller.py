@@ -32,8 +32,10 @@ class HardCode_Controller(client, boundingBox_pts):
         self.mem = np.zeros([3,1])
         self.pictureCoords = [[0,0], [0,144], [256,144], [256,0]]
 
-    def move(self, vec_x, vec_y, vec_z, velocity):
-        self.client.moveByAngleThrottleAsync()      #TODO: Add parameters. Using moveby anglethrottle instead of movetopos because we do not necessarily know absolute position.
+    def move(self, pts):
+        thresholdArea = (.75)(256)(144)
+        while ((pts[0]-pts[1])*(pts[1]-pts[2])) < thresholdArea:
+            self.moveByRollPitchYawThrottleAsync(self, 0, 0, 0, 0.5, 1, vehicle_name)
 
 
     def center(self, pitch_rate = np.pi/2, yaw_rate = np.pi/2, z = 0, duration = 1):
