@@ -35,21 +35,6 @@ class HardCode_Controller:
         self.mem = np.zeros([3,1])
         self.image_Coords = [[0,0], [0,144], [256,144], [256,0]]
 
-<<<<<<< HEAD
-=======
-    def move(self, pts):
-        thresholdArea = (.75)(256)(144)
-        while ((pts[0]-pts[1])*(pts[1]-pts[2])) < thresholdArea:
-            self.moveByRollPitchYawThrottleAsync(self, 0, 0, 0, 0.5, 1, vehicle_name)
->>>>>>> 037c376f7d0fda01fe18dc0eadf9bc9ced2c3963
-
-    def move(self, pts):
-        thresholdArea = (.75)(256)(144)
-        if (self.area) < thresholdArea:
-            self.moveByRollPitchYawThrottleAsync(self, 0, 0, 0, 0.5, 1, vehicle_name)
-            self.done = False
-        else:
-            self.done = True
 
     def center(self, pitch_rate = np.pi/2, yaw_rate = np.pi/2, z = 0, duration = 1):
         """

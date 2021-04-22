@@ -54,8 +54,9 @@ class PackageDataset(torch.utils.data.Dataset):
             if y0 >= y1:
                 y1 = y0 + 1
         except ValueError:
-            print("no package in frame")
-            x0, y0, x1, y1 = [0]*4
+            # print("no package in frame")
+            # x0, y0, x1, y1 = [0]*4
+            x0, y0, x1, y1 = 0, 0, 1, 1  # temporary fix to prevent non-positive box dimensions error
 
         # get area
         area = (x1 - x0) * (y1 - y0)
@@ -119,7 +120,6 @@ def show_pred_box(test_im_path, boxes):
     boxes: something of the form `prediction[0]['boxes'][0]`
     """
     x0, y0, x1, y1 = [int(i) for i in boxes.tolist()]
-    print(x0, y0, x1, y1)
     cv_img = cv2.imread(test_im_path)
     cv_arr = cv2.rectangle(cv_img, (x0, y0), (x1, y1), (255, 0, 255), thickness=2)
     cv_arr = cv2.cvtColor(cv_arr, cv2.COLOR_BGR2RGB)
