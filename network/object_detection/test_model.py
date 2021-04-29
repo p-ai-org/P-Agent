@@ -4,6 +4,7 @@ import numpy as np
 import os
 import PIL
 import shutil
+
 import sys
 import torch
 import torch.utils.data
@@ -43,7 +44,7 @@ def main():
     """
 
     # loading model
-    loaded_model = torch.load(model_name)
+    loaded_model = torch.load(model_name, map_location = 'cuda:0')
     loaded_model.eval()
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')

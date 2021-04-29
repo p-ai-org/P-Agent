@@ -39,10 +39,10 @@ while(done == False):
 		confidence = mask_pred[0]['scores'][0]
 		x0, y0, x1, y1 = [int(i) for i in box_pred.tolist()]		# Turn into coordinates
 		box_pred = np.array([[x0,y0],[x1,y1]])			# First set of coordinates is top left of the box and second set is the bottom right
-		
-		if confidence == mask_pred[0]['scores'][0] < 0.9:		# Confidence threshold check
+		if confidence == mask_pred[0]['scores'][0] < 0.98:		# Confidence threshold check
 			box_pred = []
 
+	#TODO: Train it to better detect literal edge cases
 	Controller = HardCode_Controller(client, box_pred, mem)
 	done, mem, collided = Controller.policy()
 
@@ -50,3 +50,5 @@ if collided:
 	print("I hit a wall, dumdum")
 if not collided:
 	print("I got to the Package!")
+
+

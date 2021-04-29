@@ -2,14 +2,14 @@ import cv2
 import numpy as np
 import PIL
 from PIL import Image
-from pypfm import PFMLoader
+# from pypfm import PFMLoader 
 
 """
 Helper functions for box stuff
 """
 
 
-loader = PFMLoader(compress=False)
+# loader = PFMLoader(compress=False)
 
 
 def iso_package(pfm_file, rgb_vals):

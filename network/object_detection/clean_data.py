@@ -5,8 +5,8 @@ import sys
 import shutil
 import zipfile
 import py7zr
-from box_hndlr import iso_package, get_box, draw_box
-from pypfm import PFMLoader
+# from box_hndlr import iso_package, get_box, draw_box
+# from pypfm import PFMLoader
 from shutil import copyfile
 
 """

@@ -1,4 +1,4 @@
-name: pagent_clone3
+name: pagent_clone
 channels:
   - pytorch
   - https://repo.anaconda.com/pkgs/main/win-64
@@ -34,7 +34,6 @@ dependencies:
   - decorator=4.4.2=pyhd3eb1b0_0
   - freetype=2.10.4=hd328e21_0
   - gast=0.4.0=py_0
-  - geos=3.8.0=h33f27b4_0
   - google-auth=1.28.0=pyhd3eb1b0_0
   - google-auth-oauthlib=0.4.3=pyhd3eb1b0_0
   - google-pasta=0.2.0=py_0
@@ -99,7 +98,6 @@ dependencies:
   - rsa=4.7.2=pyhd3eb1b0_1
   - scipy=1.6.1=py38h14eb087_0
   - setuptools=52.0.0=py38haa95532_0
-  - shapely=1.7.1=py38h210f175_0
   - six=1.15.0=py38haa95532_0
   - sqlite=3.35.2=h2bbff1b_0
   - tensorboard=2.4.0=pyhc547734_0
@@ -143,9 +141,8 @@ dependencies:
     - pycocotools==2.0.2
     - pycryptodome==3.10.1
     - pyparsing==2.4.7
-    - pyquaternion==0.9.9
     - pyzstd==0.14.4
     - texttable==1.6.3
     - torchvision==0.9.1
     - tornado==4.5.3
-prefix: C:\Users\swimm\Anaconda3\envs\pagent_clone3
+prefix: C:\Users\swimm\Anaconda3\envs\pagent_clone

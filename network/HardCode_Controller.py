@@ -1,5 +1,7 @@
 import numpy as np
 import airsim
+from shapely.geometry import Polygon
+from pyquaternion import Quaternion
 
 class HardCode_Controller:
     """
@@ -32,20 +34,23 @@ class HardCode_Controller:
         """
         
         # If the package isn't in frame, rotate and try to get it in frame
-        if in_frame == False:
+        if not in_frame:
             # Rotate and capture
             self.client.moveByVelocityZAsync(0, 0, z, duration, airsim.DrivetrainType.MaxDegreeOfFreedom, airsim.YawMode(True, 90)).join()
             self.mem += 1
 
             # Lower the drone based on how many runs it's done        
-            if self.mem % 18 == 0:       
+            if self.mem % 16 == 0:       
                 self.client.moveByVelocityZAsync(0, 0, z + 1, duration, airsim.DrivetrainType.MaxDegreeOfFreedom, airsim.YawMode(False, 0)).join()       # Move down by 5 units
                 self.mem = 0
 
         # If the package is in frame, do small turns until it's centered
         else:
-            #TODO: If the distace of the max is less towards one side, move in that direction ISSUE WITH THIS!
-            self.client.moveByVelocityZAsync(0, 0, 0, duration, airsim.DrivetrainType.MaxDegreeOfFreedom, airsim.YawMode(False, dir * 20 )).join()
+            if dir == 0:
+                self.client.moveByVelocityZAsync(0, 0, z, duration, airsim.DrivetrainType.MaxDegreeOfFreedom, airsim.YawMode(True, 0)).join()
+            else:
+                #TODO: If the distace of the max is less towards one side, move in that direction
+                self.client.moveByVelocityZAsync(0, 0, z, duration, airsim.DrivetrainType.MaxDegreeOfFreedom, airsim.YawMode(True, dir * 20 )).join()
 
     # def move():
         #TODO: move function will just move the drone and correct for that movement in the orientation of the camera and then just use the camera orientation to direct itself.
@@ -57,24 +62,55 @@ class HardCode_Controller:
         area = (coords[1,0] - coords[0,0]) * (coords[1,1] - coords[0,1])
         return area
     
-    def overlap(self, rect, ratio = .4):
-        # Create an "inner box" as a threshold
-        thresh = np.subtract([self.image_Coords[:,0]], ratio * self.image_Coords[1,0])
-        thresh = np.hstack((thresh, np.subtract([self.image_Coords[:,1]], ratio * self.image_Coords[0,1])))
-        thresh[0][0] = -thresh[0][0]
-        thresh[0][3] = -thresh[0][3]
-        thresh = np.reshape(thresh, (2,2))
+    def overlap(self, rect, thresh_rect, ratio = .1):
+        """
+        rect: Bounding box points (upper left, lower right)
+        thresh: Box to compare with (upper left, lower right) - Gets scaled down
+        ratio: amount to take off
+        """
 
-        # Compare threshold with the bounding box
-        intersect = np.sort(np.vstack((thresh, rect)), 0)
-        intersect = intersect[1:3,:]        # Pick out the middle coordinates
-        intersect[:,1] = np.flip(intersect[:,1])    # swap the y coordinates (the larger one should be 0th)
-        int_area = self.area(intersect)
-        total_area = self.area(self.image_Coords)
+        # Create an array with all points. 0: upper left corner, 1: lower left, 2: lower right, 3: upper right
+        full_pts = np.array([ [rect[0,0], rect[0,1]], [rect[0,0], rect[1,1]], [rect[1,0], rect[1,1]], [rect[1,0], rect[0,1]] ])
+        full_pts = list(map(tuple, full_pts))
 
-        return int_area/total_area
+        # Create an "inner box" as a threshold (move the box down?)
+        thresh_x = np.add(thresh_rect[0,0], ratio * thresh_rect[1,0])
+        thresh_x = np.append(thresh_x, np.subtract([thresh_rect[1,0]], ratio * thresh_rect[1,0]))
+        thresh_x = np.reshape(thresh_x, (2,1))
+        thresh_y = np.add([thresh_rect[0,1]], ratio * thresh_rect[0,1])
+        thresh_y = np.append(thresh_y, np.subtract([thresh_rect[1,1]], ratio * thresh_rect[0,1]))
+        thresh_y = np.reshape(thresh_y, (2,1))
+        thresh = np.hstack((thresh_x, thresh_y))
 
-    def policy(self, center_thresh = .7, velocity = 3):
+        full_thresh = np.array([ [thresh[0,0], thresh[0,1]], [thresh[0,0], thresh[1,1]], [thresh[1,0], thresh[1,1]], [thresh[1,0], thresh[0,1]] ])
+        full_thresh = list(map(tuple, full_thresh))
+
+        # Create Polygons from areas and check overlap
+        polygon = Polygon(full_pts)
+        other_polygon = Polygon(full_thresh)
+        return polygon.intersection(other_polygon).area/other_polygon.area
+
+    def transformToEarthFrame(self, vector, q_):
+        """
+        onvert coordinates w.r.t drone -> global ("headless")
+        """
+        q = Quaternion(q_)
+        return q.rotate(vector)
+
+    def move(self, z, duration = 0.2, desired_velocity = 1):
+        """
+        Basic move command which just moves the drone forward
+        """
+        # q = self.client.getCameraInfo(0).pose.orientation #this is different from the getOrientation, taking the latter can create problem due to the fact that the drone move slower than the cam?
+        # my_quaternion = Quaternion(w_val=q.w_val,x_val=q.x_val,y_val= q.y_val,z_val=q.z_val)
+        # mvm = my_quaternion.rotate(action)
+        # self.client.moveByVelocityZAsync(2, 0, z, duration, drivetrain = airsim.DrivetrainType.ForwardOnly, yaw_mode=YawMode(False, 0))
+        vx, vy, _ = self.transformToEarthFrame([desired_velocity, 0, 0], [self.client.simGetVehiclePose().orientation.w_val,\
+            self.client.simGetVehiclePose().orientation.x_val,\
+            self.client.simGetVehiclePose().orientation.y_val,self.client.simGetVehiclePose().orientation.z_val])
+        self.client.moveByVelocityZAsync(vx=vx, vy=vy, z=z, yaw_mode=airsim.YawMode(True, 0), drivetrain=airsim.DrivetrainType.MaxDegreeOfFreedom, duration=duration).join()
+
+    def policy(self, center_thresh = .05, velocity = 3):
 
         # Grab State Information
         state = self.client.simGetVehiclePose()
@@ -84,20 +120,37 @@ class HardCode_Controller:
             centered_box = False
             self.center(False, state.position.z_val)        # If you can't find the package at all
         else:
-            # Check overlap with a "threshold" for the middle
-            if self.overlap(self.pts) > center_thresh:
+            # Check overlap with a "threshold" which is just an area in the lower center (x-edges brought in by 40%)
+            thresh_coord = self.image_Coords
+            thresh_coord[1,1] = thresh_coord[0,1]
+            thresh_coord[0,1] = 0.5* thresh_coord[0,1]
+            thresh_coord[0,0] = thresh_coord[0,0] + 0.40 * self.image_Coords[1,0]
+            thresh_coord[1,0] = thresh_coord[1,0] - 0.40 * self.image_Coords[1,0]
+
+            if self.overlap(self.pts, thresh_coord) > center_thresh:
                 centered_box = True
             else:
                 centered_box = False
-                # Determine the direction to turn to fine tune. 
-                if (self.image_Coords[1,1]/2 - self.pts[0,0]) > (self.pts[1,0] - self.image_Coords[1,1]/2):
-                    self.center(True, state.position.z_val, 1)
+                # Determine the direction to turn to fine tune.
+                left_area = (self.image_Coords[1,0]/2 - self.pts[0,0])
+                right_area = (self.pts[1,0] - self.image_Coords[1,0]/2)
+
+                # Top Area comparison might be USELESS
+                top_area = (self.image_Coords[0,1]/2 - self.pts[0,1])
+
+                # If the difference in height is proportionally larger than the differences in left or right directions
+                if top_area/(self.image_Coords[0,1]/2) > left_area/(self.image_Coords[1,0]/2) and \
+                    top_area/(self.pts[0,1]/2) > right_area/(self.pts[1,0]/2):
+                        self.center(True, state.position.z_val + 1, 0)
+
+                if left_area > right_area:
+                    self.center(True, state.position.z_val+0.1, -1)     # Rotate left
                 else:
-                    self.center(True, state.position.z_val, -1)
+                    self.center(True, state.position.z_val+0.1, 1)
 
         # Move
         if centered_box:
-            move(rel_position[x], rel_position[y], rel_position[z], velocity)
+            self.move(state.position.z_val)
 
         # Check if the drone collided or landed
         collided = self.client.simGetCollisionInfo()

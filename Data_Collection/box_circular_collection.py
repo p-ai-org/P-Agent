@@ -70,7 +70,7 @@ for count, [x, y, z] in enumerate(pts):
         success = client.simSetSegmentationObjectID(object_name, 0)
         responses = client.simGetImages([
         airsim.ImageRequest("0", airsim.ImageType.Scene),         # REGULAR PICTURE
-        airsim.ImageRequest("0", airsim.ImageType.Segmentation, False, False)])
+        airsim.ImageRequest("0", airsim.I   mageType.Segmentation, False, False)])
 
     else:
         responses = client.simGetImages([
