@@ -5,8 +5,14 @@ import sys
 import shutil
 import zipfile
 import py7zr
+<<<<<<< HEAD
+from box_hndlr import iso_package, get_box, draw_box
+from pathlib import Path
+from pypfm import PFMLoader
+=======
 # from box_hndlr import iso_package, get_box, draw_box
 # from pypfm import PFMLoader
+>>>>>>> 709b7c7177d4fc307a5b12faafc05d0cc4d083c1
 from shutil import copyfile
 
 """
@@ -19,13 +25,15 @@ def main():
     z_file = sys.argv[1]  # the name of the zip file with hierarchy z_file/Normal(Segmentation)
     new_dir = sys.argv[2]  # the name of the new dir with hierarchy new_dir/no_package(package)/Normal(Segmentation)
 
+    path = Path(z_file)
+    parent_path = path.parent.absolute()
     if z_file[-4:] == ".zip":
         with zipfile.ZipFile(z_file, 'r') as zip_ref:
-            zip_ref.extractall()
+            zip_ref.extractall(path=parent_path)
         z_file_base = z_file[:-4]
     elif z_file[-3:] == ".7z":
         with py7zr.SevenZipFile(z_file, 'r') as zip_ref:
-            zip_ref.extractall()
+            zip_ref.extractall(path=parent_path)
         z_file_base = z_file[:-3]
 
     old_names = {}

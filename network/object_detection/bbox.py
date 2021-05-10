@@ -1,4 +1,5 @@
 import cv2
+import distutils.util
 import numpy as np
 import os
 import PIL
@@ -9,6 +10,7 @@ import torch.utils.data
 import torchvision
 import zipfile
 from IPython.display import Image
+from matplotlib import pyplot as plt
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 from shutil import copyfile
@@ -64,9 +66,6 @@ class PackageDataset(torch.utils.data.Dataset):
         # (we could add the coordinates of the segmentation if we wanted)
         target = {}
         target["boxes"] = torch.as_tensor([[x0, y0, x1, y1]], dtype=torch.float32)
-        # target["image_id"] = torch.tensor([idx])
-        # target["area"] = torch.tensor([area])
-        # target["includes_package"] = torch.as_tensor(includes_package)
         target["labels"] = torch.tensor([1])
         target["masks"] = masks
         target["image_id"] = torch.tensor([idx])
@@ -132,7 +131,7 @@ def testing_images(im_dir, model, show_im=False):
         f_im = PIL.Image.open(os.path.join(im_dir, f)).convert("RGB")
         f_tensor = transforms.ToTensor()(f_im)
         with torch.no_grad():
-            f_pred = model([f_tensor.to(device)])
+            f_mask_pred = model([f_tensor.to(device)])
         print(f"image {f}")
         try:
             print(f"bbox confidence: {f_mask_pred[0]['scores'][0]}")
@@ -155,6 +154,8 @@ def main():
     data_dir = sys.argv[1]
     model_out_path = sys.argv[2]
     num_epochs = int(sys.argv[3]) if len(sys.argv) > 3 else 6
+    plot_train_loss = bool(distutils.util.strtobool(sys.argv[4])) if len(sys.argv) > 4 else False
+    plot_valid_loss = bool(distutils.util.strtobool(sys.argv[5])) if len(sys.argv) > 5 else False
 
     # using dataset and defined transformations
     dataset = PackageDataset(data_dir, get_transform(train=True))
@@ -198,16 +199,65 @@ def main():
                                                 gamma=0.1)    
 
     # TRAINING
+    all_train_loss = []
+    all_valid_loss = []
     for epoch in range(num_epochs):
+        print(f"TRAIN")
         # train for one epoch and printing every 10 iterations
-        train_one_epoch(my_model, optimizer, data_loader, device, epoch, print_freq=10)
+        # train_one_epoch(my_model, optimizer, data_loader, device, epoch, print_freq=10)
+        _, all_loss_epoch = train_one_epoch(my_model, optimizer, data_loader, device, epoch, print_freq=60)
+        
+        if plot_train_loss:
+            num_recorded = len(all_loss_epoch)
+            avg_loss_epoch = sum(all_loss_epoch) / num_recorded
+            all_train_loss.extend(all_loss_epoch)
+
+        print(f"AVERAGE LOSS EPOCH {epoch}: {avg_loss_epoch}")
+
+        # Validation loss
+        if plot_valid_loss:
+            with torch.no_grad():
+                for images, targets in data_loader_test:
+                    images = list(image.to(device) for image in images)
+                    targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
+
+                    loss_dict = my_model(images, targets)
+
+                    loss_dict_reduced = references.utils.reduce_dict(loss_dict)
+                    losses_reduced = sum(loss for loss in loss_dict_reduced.values())
+
+                    loss_value = losses_reduced.item()
+
+                    all_valid_loss.append(loss_value)
+
         # update learning rate
         lr_scheduler.step()
+        print(f"EVALUATE")
+
         # evaluate on test dataset
         evaluate(my_model, data_loader_test, device=device)
+
+    if plot_train_loss:
+        train_x = [a * num_epochs / len(all_train_loss) for a in range(len(all_train_loss))]
+        plt.plot(train_x, all_train_loss, label="training loss")
+
+    if plot_valid_loss:
+        valid_x = [a * len(all_train_loss) / len(all_valid_loss) for a in range(len(all_valid_loss))]
+        plt.plot(valid_x, all_valid_loss, label="validation loss")
+    
+    if plot_train_loss or plot_valid_loss:
+        plt.xlabel("Epochs")
+        plt.ylabel("Loss")
+        plt.legend()
+        plt.title("Loss vs. Epochs")
+
+        plt.xticks([a for a in range(num_epochs + 1)])
+        # plt.savefig('./eighth_plot.png')
+        plt.savefig(f"{model_out_path}-loss.png")
 
     torch.save(my_model, model_out_path)
 
 
 if __name__ == "__main__":
     main()
+    

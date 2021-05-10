@@ -27,7 +27,7 @@ def main():
     model_name = sys.argv[1]   # should be .pt file in ./
     test_im_dir = sys.argv[2]  # assume test_im_dir/Normal and test_im_dir/Segmentation
     package_dir = bool(distutils.util.strtobool(sys.argv[3])) if len(sys.argv) > 3 else True
-    output_iou = bool(distutils.util.strtobool(sy.argv[4])) if len(sys.argv) > 4 else False
+    output_iou = bool(distutils.util.strtobool(sys.argv[4])) if len(sys.argv) > 4 else False
 
     """
     If directory contains images of packages (package_dir == True), then new directory test_im_dir/NormalEval
@@ -47,13 +47,21 @@ def main():
     loaded_model = torch.load(model_name, map_location = 'cuda:0')
     loaded_model.eval()
 
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    device = torch.device('cuda:1') if torch.cuda.is_available() else torch.device('cpu')
 
     assert os.path.isdir(os.path.join(test_im_dir, 'Normal'))
     num_test_images = len(os.listdir(os.path.join(test_im_dir, 'Normal')))
 
     os.mkdir(os.path.join(test_im_dir, 'NormalEval'))
     os.mkdir(os.path.join(test_im_dir, 'NormalEval', 'images'))    
+
+    # keeping track of predictions without bbox and with low confidence if package is present
+    if package_dir:
+        os.mkdir(os.path.join(test_im_dir, 'NormalEval', 'images', 'no_bbox'))
+        os.mkdir(os.path.join(test_im_dir, 'NormalEval', 'images', 'low_conf'))
+    # keeping track of predictions with high confidence if package is not present
+    else:
+        os.mkdir(os.path.join(test_im_dir, 'NormalEval', 'images', 'high_conf'))
 
     total_area = 0
     total_conf = 0
@@ -98,6 +106,8 @@ def main():
 
         # package not detected
         except IndexError: 
+            # if package_dir:
+            #     f_im.save(os.path.join(test_im_dir, 'NormalEval', 'images', ))
             pass
 
     
